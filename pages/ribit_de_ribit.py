@@ -26,40 +26,35 @@ scenario = st.radio("Select a scenario to visualize:", (
     "Customize your own"
 ), index=3)
 
+# All use the same interest rate (Index Fund)
+annual_rate = 7.0
+investment_option = "Index Fund"
+
 if scenario == "Eyal starts investing at age 20":
     initial_amount = 5000
     monthly_contribution = 500
     years = 40
-    investment_option = "Index Fund"
+    info = "Eyal invested ₪5,000 initially and ₪500 per month for 40 years (Total invested: ₪245,000)."
 elif scenario == "Bar starts at age 30":
     initial_amount = 5000
     monthly_contribution = 700
     years = 30
-    investment_option = "Index Fund"
+    info = "Bar invested ₪5,000 initially and ₪700 per month for 30 years (Total invested: ₪259,000)."
 elif scenario == "Gal starts at age 40":
     initial_amount = 10000
     monthly_contribution = 1000
     years = 20
-    investment_option = "Crypto"
+    info = "Gal invested ₪10,000 initially and ₪1,000 per month for 20 years (Total invested: ₪250,000)."
 else:
     st.markdown("---")
     initial_amount = st.slider("💰 Initial investment amount (₪)", 100, 20000, 5000, step=100)
     monthly_contribution = st.slider("📥 Monthly contribution (₪)", 0, 5000, 500, step=100)
     years = st.slider("⏳ How many years will you invest?", 1, 40, 30)
-    investment_option = st.selectbox("Choose type of investment", ("Bank Deposit", "Index Fund", "Crypto"))
+    info = f"You chose to invest ₪{initial_amount} initially and ₪{monthly_contribution} per month for {years} years (Total invested: ₪{initial_amount + monthly_contribution * years * 12:,})."
 
-# --- Interest Rate and Info ---
-if investment_option == "Bank Deposit":
-    annual_rate = 2.0
-    explanation = "🔐 A safe but low-return investment. Ideal for risk-averse individuals."
-elif investment_option == "Index Fund":
-    annual_rate = 7.0
-    explanation = "📈 Long-term diversified stock investment. Balanced risk and return."
-else:
-    annual_rate = 12.0
-    explanation = "🚀 High potential return with high volatility. Risky but possibly rewarding."
+st.markdown(f"#### 💡 Investment Summary\n{info}")
 
-st.info(explanation)
+st.info("📈 Long-term diversified stock investment. Balanced risk and return.")
 
 # --- Compound Interest Calculation ---
 months = years * 12
