@@ -3,68 +3,65 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rcParams
 
-# --- הגדרות עיצוב עברית לגרפים ---
+# --- Set up English font and styling ---
 rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['axes.labelweight'] = 'bold'
 plt.rcParams['axes.titleweight'] = 'bold'
 
-# --- כותרת ---
-st.set_page_config(page_title="ריבית דריבית", layout="centered")
-st.markdown("""
-<h1 style='text-align: right; direction: rtl;'>
-💸 ריבית דריבית: תשקיע חכם, תרוויח בגדול
-</h1>
-<p style='text-align: right; direction: rtl;'>
-זהו סימולטור אינטראקטיבי שממחיש את <strong>הכוח של ריבית דריבית</strong>.
-באמצעות הדגמות, גרפים, שאלות והשוואות - תבין למה כדאי להתחיל לחסוך כמה שיותר מוקדם.
-</p>
-""", unsafe_allow_html=True)
+# --- Page configuration ---
+st.set_page_config(page_title="Compound Interest Simulator", layout="centered")
+st.title("💸 Compound Interest: Invest Smart, Earn Big")
 
-# --- תרחישי הדגמה ---
-st.markdown("<h3 style='text-align: right; direction: rtl;'>📊 השוואה בין תרחישים</h3>", unsafe_allow_html=True)
-scenario = st.radio("בחר תרחיש להשוואה:", (
-    "אייל התחיל לחסוך בגיל 20", 
-    "בר חוסכת מגיל 30", 
-    "גל התחיל רק בגיל 40",
-    "אני מגדיר לבד"
+st.markdown("""
+This is an interactive simulator that demonstrates the **power of compound interest**.
+With visualizations, comparisons, and a quick quiz, you'll learn why starting early matters.
+""")
+
+# --- Scenarios ---
+st.markdown("### 📊 Choose a scenario")
+scenario = st.radio("Select a scenario to visualize:", (
+    "Eyal starts investing at age 20", 
+    "Bar starts at age 30", 
+    "Gal starts at age 40",
+    "Customize your own"
 ), index=3)
 
-if scenario == "אייל התחיל לחסוך בגיל 20":
+if scenario == "Eyal starts investing at age 20":
     initial_amount = 5000
     monthly_contribution = 500
     years = 40
-    investment_option = "קרן מדדים"
-elif scenario == "בר חוסכת מגיל 30":
+    investment_option = "Index Fund"
+elif scenario == "Bar starts at age 30":
     initial_amount = 5000
     monthly_contribution = 700
     years = 30
-    investment_option = "קרן מדדים"
-elif scenario == "גל התחיל רק בגיל 40":
+    investment_option = "Index Fund"
+elif scenario == "Gal starts at age 40":
     initial_amount = 10000
     monthly_contribution = 1000
     years = 20
-    investment_option = "קריפטו"
+    investment_option = "Crypto"
 else:
     st.markdown("---")
-    initial_amount = st.slider("💰 סכום התחלתי (ש""ח)", 100, 20000, 5000, step=100)
-    monthly_contribution = st.slider("📥 הפקדה חודשית (ש""ח)", 0, 5000, 500, step=100)
-    years = st.slider("⏳ כמה שנים תחסוך?", 1, 40, 30)
-    investment_option = st.selectbox("בחר סוג השקעה", ("פיקדון בנקאי", "קרן מדדים", "קריפטו"))
+    initial_amount = st.slider("💰 Initial investment amount (₪)", 100, 20000, 5000, step=100)
+    monthly_contribution = st.slider("📥 Monthly contribution (₪)", 0, 5000, 500, step=100)
+    years = st.slider("⏳ How many years will you invest?", 1, 40, 30)
+    investment_option = st.selectbox("Choose type of investment", ("Bank Deposit", "Index Fund", "Crypto"))
 
-# --- קביעת ריבית ---
-if investment_option == "פיקדון בנקאי":
+# --- Interest Rate and Info ---
+if investment_option == "Bank Deposit":
     annual_rate = 2.0
-    explanation = "🔐 השקעה בטוחה אך עם תשואה נמוכה. מתאימה למי שמעדיף יציבות."
-elif investment_option == "קרן מדדים":
+    explanation = "🔐 A safe but low-return investment. Ideal for risk-averse individuals."
+elif investment_option == "Index Fund":
     annual_rate = 7.0
-    explanation = "📈 השקעה לטווח ארוך במניות מגוונות. תשואה ממוצעת ויציבות יחסית."
+    explanation = "📈 Long-term diversified stock investment. Balanced risk and return."
 else:
     annual_rate = 12.0
-    explanation = "🚀 השקעה תנודתית עם פוטנציאל רווח גבוה - וגם סיכון בהתאם."
+    explanation = "🚀 High potential return with high volatility. Risky but possibly rewarding."
 
-st.markdown(f"<div style='direction: rtl; text-align: right;'>{explanation}</div>", unsafe_allow_html=True)
+st.info(explanation)
 
-# --- חישוב ריבית דריבית ---
+# --- Compound Interest Calculation ---
 months = years * 12
 monthly_rate = (1 + annual_rate / 100) ** (1 / 12) - 1
 
@@ -78,43 +75,40 @@ for month in range(months + 1):
     balance.append(current)
     cash_no_interest.append(initial_amount + monthly_contribution * month)
 
-# --- גרף בעברית ---
-st.markdown("<h3 style='text-align: right; direction: rtl;'>📈 כך הכסף שלך גדל עם הזמן</h3>", unsafe_allow_html=True)
+# --- Chart ---
+st.markdown("### 📈 How your money grows over time")
 
 fig, ax = plt.subplots()
-ax.plot(balance, label="עם ריבית דריבית")
-ax.plot(cash_no_interest, label="בלי ריבית (רק הפקדות)")
-ax.set_xlabel("חודשים", fontsize=12)
-ax.set_ylabel("ש""ח", fontsize=12)
-ax.set_title(f"צמיחה לאורך {years} שנים", fontsize=14)
+ax.plot(balance, label="With Compound Interest")
+ax.plot(cash_no_interest, label="No Interest (just deposits)")
+ax.set_xlabel("Months", fontsize=12)
+ax.set_ylabel("₪", fontsize=12)
+ax.set_title(f"Growth Over {years} Years", fontsize=14)
 ax.legend(loc='upper left')
 ax.grid(True)
 
 st.pyplot(fig)
 
-# --- תוצאה ---
+# --- Summary ---
 final_gain = balance[-1] - cash_no_interest[-1]
-st.markdown(f"<div style='direction: rtl; text-align: right;'>📌 אחרי <strong>{years}</strong> שנים תחסוך <strong>{int(balance[-1]):,}</strong> ש""ח, מתוכם <strong>{int(final_gain):,}</strong> ש""ח בזכות ריבית דריבית.</div>", unsafe_allow_html=True)
+st.markdown(f"📌 After **{years} years**, you'll have **₪{int(balance[-1]):,}**, including **₪{int(final_gain):,}** from compound interest.")
 
-st.caption(f"🕒 זה שווה ערך ל-{months} חודשים של חיסכון והשקעה.")
+st.caption(f"🕒 That's a total of {months} months of saving and investing.")
 
-# --- חידון קטן ---
-st.markdown("<h3 style='text-align: right; direction: rtl;'>❓ חידון מהיר</h3>", unsafe_allow_html=True)
-guess = st.number_input("אם תחסוך 300 ש""ח בחודש למשך 25 שנה בריבית של 7% – כמה תצבור בערך?", min_value=0, step=1000)
+# --- Quick Quiz ---
+st.markdown("### ❓ Quick Quiz")
+guess = st.number_input("If you save ₪300/month for 25 years at 7% interest – how much will you have?", min_value=0, step=1000)
 true_value = 300 * (((1 + 0.07/12) ** (12*25) - 1) / (0.07/12))
 
 if guess > 0:
     diff = abs(guess - true_value)
     if diff < 5000:
-        st.success("🎉 כל הכבוד! אתה מאוד קרוב לתוצאה האמיתית")
+        st.success("🎉 Great job! You're very close to the correct answer.")
     else:
-        st.error(f"כמעט! הסכום הנכון הוא בערך {int(true_value):,} ש""ח")
+        st.error(f"Almost! The correct value is about ₪{int(true_value):,}")
 
-# --- טיפ מסכם ---
+# --- Final Tip ---
 st.markdown("""
-<h3 style='text-align: right; direction: rtl;'>💡 טיפ חשוב לסיום</h3>
-<p style='text-align: right; direction: rtl;'>
-ריבית דריבית עובדת לטובתך – אבל רק אם תיתן לה <strong>זמן</strong>. 
-ככל שתתחיל מוקדם יותר, כך הכסף שלך יוכל לגדול יותר.
-</p>
-""", unsafe_allow_html=True)
+### 💡 Final Tip
+Compound interest works best when you give it **time**. The earlier you start, the more your money can grow.
+""")
