@@ -2,50 +2,60 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Title
-st.title("💸 What Will Happen to Your Money? Choose and Invest Wisely")
+# --- כותרת ---
+st.set_page_config(page_title="ריבית דריבית", layout="centered")
+st.title("💸 ריבית דריבית: תשקיע חכם, תרוויח בגדול")
 
-st.markdown("This is an interactive simulator that shows how your money can grow over time – depending on **how much you save** and **where you invest** it.")
+st.markdown("""
+זהו סימולטור אינטראקטיבי שממחיש את **הכוח של ריבית דריבית**. 
+באמצעות הדגמות, גרפים, שאלות והשוואות - תבין למה כדאי להתחיל לחסוך כמה שיותר מוקדם.
+""")
 
-# Inputs
-initial_amount = st.slider("💰 Initial investment amount (₪)", 100, 20000, 1000, step=100)
-monthly_contribution = st.slider("📥 Monthly contribution (₪)", 0, 5000, 500, step=100)
-years = st.slider("⏳ Investment duration (years)", 1, 40, 10)
+# --- תרחישי הדגמה ---
+st.markdown("### 📊 השוואה בין תרחישים")
+scenario = st.radio("בחר תרחיש להשוואה:", (
+    "אייל התחיל לחסוך בגיל 20", 
+    "בר חוסכת מגיל 30", 
+    "גל התחיל רק בגיל 40",
+    "אני מגדיר לבד"
+))
 
-investment_option = st.radio(
-    "📊 Choose your type of investment",
-    (
-        "Bank deposit (low risk)",
-        "Index fund (medium risk)",
-        "Cryptocurrency (high risk)"
-    )
-)
+if scenario == "אייל התחיל לחסוך בגיל 20":
+    initial_amount = 5000
+    monthly_contribution = 500
+    years = 40
+    investment_option = "קרן מדדים"
+elif scenario == "בר חוסכת מגיל 30":
+    initial_amount = 5000
+    monthly_contribution = 700
+    years = 30
+    investment_option = "קרן מדדים"
+elif scenario == "גל התחיל רק בגיל 40":
+    initial_amount = 10000
+    monthly_contribution = 1000
+    years = 20
+    investment_option = "קריפטו"
+else:
+    st.markdown("---")
+    initial_amount = st.slider("💰 סכום התחלתי (ש""ח)", 100, 20000, 5000, step=100)
+    monthly_contribution = st.slider("📥 הפקדה חודשית (ש""ח)", 0, 5000, 500, step=100)
+    years = st.slider("⏳ כמה שנים תחסוך?", 1, 40, 30)
+    investment_option = st.selectbox("בחר סוג השקעה", ("פיקדון בנקאי", "קרן מדדים", "קריפטו"))
 
-# Assign interest rate and explanation
-if investment_option == "Bank deposit (low risk)":
+# --- קביעת ריבית ---
+if investment_option == "פיקדון בנקאי":
     annual_rate = 2.0
-    explanation = """
-    🔐 **Bank deposit** is a safe and stable option. Very low risk, but also low returns.
-    Ideal for people who prefer stability and no surprises.
-    """
-elif investment_option == "Index fund (medium risk)":
+    explanation = "🔐 השקעה בטוחה אך עם תשואה נמוכה. מתאימה למי שמעדיף יציבות."
+elif investment_option == "קרן מדדים":
     annual_rate = 7.0
-    explanation = """
-    📈 **Index funds** invest in a wide range of companies (e.g., S&P 500). Medium risk with strong long-term growth potential.
-    A smart choice for long-term thinkers.
-    """
+    explanation = "📈 השקעה לטווח ארוך במניות מגוונות. תשואה ממוצעת ויציבות יחסית."
 else:
     annual_rate = 12.0
-    explanation = """
-    🚀 **Cryptocurrency** can rise fast – but also crash fast. It's highly volatile and risky.
-    Not suitable for everyone and requires the ability to tolerate potential losses.
-    """
+    explanation = "🚀 השקעה תנודתית עם פוטנציאל רווח גבוה - וגם סיכון בהתאם."
 
-# Show educational explanation
-st.markdown("### 🧠 Financial Insight")
 st.info(explanation)
 
-# Compound interest calculation
+# --- חישוב ריבית דריבית ---
 months = years * 12
 monthly_rate = (1 + annual_rate / 100) ** (1 / 12) - 1
 
@@ -59,19 +69,39 @@ for month in range(months + 1):
     balance.append(current)
     cash_no_interest.append(initial_amount + monthly_contribution * month)
 
-# Chart
-st.markdown("### 📉 Growth Over Time: With Interest vs. Without")
+# --- גרף ---
+st.markdown("### 📈 כך הכסף שלך גדל עם הזמן")
 
 fig, ax = plt.subplots()
-ax.plot(balance, label="With compound interest")
-ax.plot(cash_no_interest, label="No interest (just savings)")
-ax.set_xlabel("Months")
-ax.set_ylabel("₪")
-ax.set_title("Investment Growth Over Time")
+ax.plot(balance, label="עם ריבית דריבית")
+ax.plot(cash_no_interest, label="בלי ריבית (רק הפקדות)")
+ax.set_xlabel("חודשים")
+ax.set_ylabel("ש""ח")
+ax.set_title(f"צמיחה לאורך {years} שנים")
 ax.legend()
+
 st.pyplot(fig)
 
-# Summary
+# --- תוצאה ---
 final_gain = balance[-1] - cash_no_interest[-1]
-st.markdown(f"🎯 After {years} years, you'll have **₪{int(balance[-1]):,}**, compared to **₪{int(cash_no_interest[-1]):,}** without interest.")
-st.success(f"💡 Total gain from compound interest: **₪{int(final_gain):,}**")
+st.success(f"📌 אחרי {years} שנים תחסוך {int(balance[-1]):,} ש""ח, מתוכם {int(final_gain):,} ש""ח בזכות ריבית דריבית.")
+
+st.caption(f"🕒 זה שווה ערך ל-{months} חודשים של חיסכון והשקעה.")
+
+# --- חידון קטן ---
+st.markdown("### ❓ חידון מהיר")
+guess = st.number_input("אם תחסוך 300 ש""ח בחודש למשך 25 שנה בריבית של 7% – כמה תצבור בערך?", min_value=0, step=1000)
+true_value = 300 * (((1 + 0.07/12) ** (12*25) - 1) / (0.07/12))
+
+if guess > 0:
+    diff = abs(guess - true_value)
+    if diff < 5000:
+        st.success("כל הכבוד! אתה מאוד קרוב לתוצאה האמיתית")
+    else:
+        st.error(f"כמעט! הסכום הנכון הוא בערך {int(true_value):,} ש""ח")
+
+# --- טיפ נוסף ---
+st.markdown("""
+### 💡 טיפ חשוב לסיום
+ריבית דריבית עובדת לטובתך – אבל רק אם תיתן לה **זמן**. ככל שתתחיל מוקדם יותר, כך הכסף שלך יוכל לגדול יותר.
+""")
