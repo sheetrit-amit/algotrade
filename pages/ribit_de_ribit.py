@@ -87,9 +87,9 @@ for month in range(months + 1):
 st.markdown("### 📈 How your money grows over time")
 
 fig, ax = plt.subplots()
-ax.plot(balance, label="With Compound Interest")
-ax.plot(cash_no_interest, label="No Interest (just deposits)")
-ax.set_xlabel("Months", fontsize=12)
+ax.plot(range(years + 1), [balance[i * 12] for i in range(years + 1)], label="With Compound Interest")
+ax.plot(range(years + 1), [cash_no_interest[i * 12] for i in range(years + 1)], label="No Interest (just deposits)")
+ax.set_xlabel("Years", fontsize=12)
 ax.set_ylabel("₪", fontsize=12)
 ax.set_title(f"Growth Over {years} Years", fontsize=14)
 ax.legend(loc='upper left')
