@@ -50,6 +50,19 @@ else:
     initial_amount = st.slider("💰 Initial investment amount (₪)", 100, 20000, 5000, step=100)
     monthly_contribution = st.slider("📥 Monthly contribution (₪)", 0, 5000, 500, step=100)
     years = st.slider("⏳ How many years will you invest?", 1, 40, 30)
+    investment_option = st.selectbox("📊 Choose your investment type:", ("Bank Deposit", "Index Fund", "Crypto"))
+
+    if investment_option == "Bank Deposit":
+        annual_rate = 2.0
+        explanation = "🔐 A safe but low-return investment. Ideal for risk-averse individuals."
+    elif investment_option == "Index Fund":
+        annual_rate = 7.0
+        explanation = "📈 Long-term diversified stock investment. Balanced risk and return."
+    else:
+        annual_rate = 12.0
+        explanation = "🚀 High potential return with high volatility. Risky but possibly rewarding."
+
+    st.info(explanation)
     info = f"You chose to invest ₪{initial_amount} initially and ₪{monthly_contribution} per month for {years} years (Total invested: ₪{initial_amount + monthly_contribution * years * 12:,})."
 
 st.markdown(f"#### 💡 Investment Summary\n{info}")
