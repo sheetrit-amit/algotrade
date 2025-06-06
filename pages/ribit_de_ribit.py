@@ -86,7 +86,16 @@ st.pyplot(fig)
 
 # --- Summary ---
 final_gain = balance[-1] - cash_no_interest[-1]
-st.markdown(f"📌 After **{years} years**, you'll have **₪{int(balance[-1]):,}**, including **₪{int(final_gain):,}** from compound interest.")
+if scenario.startswith("Eyal"):
+    name = "Eyal"
+elif scenario.startswith("Bar"):
+    name = "Bar"
+elif scenario.startswith("Gal"):
+    name = "Gal"
+else:
+    name = "you"
+
+st.markdown(f"📌 After **{years} years**, {name} will have **₪{int(balance[-1]):,}**, including **₪{int(final_gain):,}** from compound interest.")
 
 st.caption(f"🕒 That's a total of {months} months of saving and investing.")
 
