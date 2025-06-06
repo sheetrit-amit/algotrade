@@ -1,24 +1,33 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import rcParams
+
+# --- הגדרות עיצוב עברית לגרפים ---
+rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams['axes.labelweight'] = 'bold'
+plt.rcParams['axes.titleweight'] = 'bold'
 
 # --- כותרת ---
 st.set_page_config(page_title="ריבית דריבית", layout="centered")
-st.title("💸 ריבית דריבית: תשקיע חכם, תרוויח בגדול")
-
 st.markdown("""
-זהו סימולטור אינטראקטיבי שממחיש את **הכוח של ריבית דריבית**. 
+<h1 style='text-align: right; direction: rtl;'>
+💸 ריבית דריבית: תשקיע חכם, תרוויח בגדול
+</h1>
+<p style='text-align: right; direction: rtl;'>
+זהו סימולטור אינטראקטיבי שממחיש את <strong>הכוח של ריבית דריבית</strong>.
 באמצעות הדגמות, גרפים, שאלות והשוואות - תבין למה כדאי להתחיל לחסוך כמה שיותר מוקדם.
-""")
+</p>
+""", unsafe_allow_html=True)
 
 # --- תרחישי הדגמה ---
-st.markdown("### 📊 השוואה בין תרחישים")
+st.markdown("<h3 style='text-align: right; direction: rtl;'>📊 השוואה בין תרחישים</h3>", unsafe_allow_html=True)
 scenario = st.radio("בחר תרחיש להשוואה:", (
     "אייל התחיל לחסוך בגיל 20", 
     "בר חוסכת מגיל 30", 
     "גל התחיל רק בגיל 40",
     "אני מגדיר לבד"
-))
+), index=3)
 
 if scenario == "אייל התחיל לחסוך בגיל 20":
     initial_amount = 5000
@@ -53,7 +62,7 @@ else:
     annual_rate = 12.0
     explanation = "🚀 השקעה תנודתית עם פוטנציאל רווח גבוה - וגם סיכון בהתאם."
 
-st.info(explanation)
+st.markdown(f"<div style='direction: rtl; text-align: right;'>{explanation}</div>", unsafe_allow_html=True)
 
 # --- חישוב ריבית דריבית ---
 months = years * 12
@@ -69,39 +78,43 @@ for month in range(months + 1):
     balance.append(current)
     cash_no_interest.append(initial_amount + monthly_contribution * month)
 
-# --- גרף ---
-st.markdown("### 📈 כך הכסף שלך גדל עם הזמן")
+# --- גרף בעברית ---
+st.markdown("<h3 style='text-align: right; direction: rtl;'>📈 כך הכסף שלך גדל עם הזמן</h3>", unsafe_allow_html=True)
 
 fig, ax = plt.subplots()
 ax.plot(balance, label="עם ריבית דריבית")
 ax.plot(cash_no_interest, label="בלי ריבית (רק הפקדות)")
-ax.set_xlabel("חודשים")
-ax.set_ylabel("ש""ח")
-ax.set_title(f"צמיחה לאורך {years} שנים")
-ax.legend()
+ax.set_xlabel("חודשים", fontsize=12)
+ax.set_ylabel("ש""ח", fontsize=12)
+ax.set_title(f"צמיחה לאורך {years} שנים", fontsize=14)
+ax.legend(loc='upper left')
+ax.grid(True)
 
 st.pyplot(fig)
 
 # --- תוצאה ---
 final_gain = balance[-1] - cash_no_interest[-1]
-st.success(f"📌 אחרי {years} שנים תחסוך {int(balance[-1]):,} ש""ח, מתוכם {int(final_gain):,} ש""ח בזכות ריבית דריבית.")
+st.markdown(f"<div style='direction: rtl; text-align: right;'>📌 אחרי <strong>{years}</strong> שנים תחסוך <strong>{int(balance[-1]):,}</strong> ש""ח, מתוכם <strong>{int(final_gain):,}</strong> ש""ח בזכות ריבית דריבית.</div>", unsafe_allow_html=True)
 
 st.caption(f"🕒 זה שווה ערך ל-{months} חודשים של חיסכון והשקעה.")
 
 # --- חידון קטן ---
-st.markdown("### ❓ חידון מהיר")
+st.markdown("<h3 style='text-align: right; direction: rtl;'>❓ חידון מהיר</h3>", unsafe_allow_html=True)
 guess = st.number_input("אם תחסוך 300 ש""ח בחודש למשך 25 שנה בריבית של 7% – כמה תצבור בערך?", min_value=0, step=1000)
 true_value = 300 * (((1 + 0.07/12) ** (12*25) - 1) / (0.07/12))
 
 if guess > 0:
     diff = abs(guess - true_value)
     if diff < 5000:
-        st.success("כל הכבוד! אתה מאוד קרוב לתוצאה האמיתית")
+        st.success("🎉 כל הכבוד! אתה מאוד קרוב לתוצאה האמיתית")
     else:
         st.error(f"כמעט! הסכום הנכון הוא בערך {int(true_value):,} ש""ח")
 
-# --- טיפ נוסף ---
+# --- טיפ מסכם ---
 st.markdown("""
-### 💡 טיפ חשוב לסיום
-ריבית דריבית עובדת לטובתך – אבל רק אם תיתן לה **זמן**. ככל שתתחיל מוקדם יותר, כך הכסף שלך יוכל לגדול יותר.
-""")
+<h3 style='text-align: right; direction: rtl;'>💡 טיפ חשוב לסיום</h3>
+<p style='text-align: right; direction: rtl;'>
+ריבית דריבית עובדת לטובתך – אבל רק אם תיתן לה <strong>זמן</strong>. 
+ככל שתתחיל מוקדם יותר, כך הכסף שלך יוכל לגדול יותר.
+</p>
+""", unsafe_allow_html=True)
