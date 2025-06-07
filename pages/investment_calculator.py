@@ -223,11 +223,19 @@ def get_stock_data(ticker, start, end):
     """Fetch stock data with error handling"""
     try:
         stock = yf.Ticker(ticker)
-        data = stock.history(start=start, end=end)
+        data = stock.history(start=start, end=end, period="max")
         
         if data.empty:
             st.error(f"No data available for {ticker} in the selected period.")
             return None
+        
+        # Debug information
+        actual_start = data.index.min().date()
+        actual_end = data.index.max().date()
+        
+        # Show warning if dates don't match exactly
+        if actual_start > start or actual_end < end:
+            st.warning(f"⚠️ Note: Data available from {actual_start} to {actual_end} (requested: {start} to {end})")
             
         return data
     except Exception as e:
@@ -388,8 +396,12 @@ if calculate_button:
                         hovertemplate='<b>Lowest Date</b>: %{x}<br><b>Lowest Price</b>: $%{y:.2f}<extra></extra>'
                     ))
                     
+                    # Get actual date range from data
+                    actual_start = stock_data.index.min().date()
+                    actual_end = stock_data.index.max().date()
+                    
                     fig.update_layout(
-                        title=f"{selected_company} Stock Performance: {start_date} to {end_date}",
+                        title=f"{selected_company} Stock Performance: {actual_start} to {actual_end}",
                         xaxis_title="Date",
                         yaxis_title="Price (USD)",
                         template='plotly_white',
