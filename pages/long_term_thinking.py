@@ -97,15 +97,26 @@ start_date = datetime(investment_year, 1, 1)
 with st.spinner(f'Fetching {selected_stock} stock data...'):
     try:
         # Get stock data
-        stock_data = yf.download(selected_stock, start=start_date, end=end_date)
+        stock_data = yf.download(selected_stock, start=start_date, end=end_date, progress=False)
         
         if stock_data.empty:
             st.error("No data found for the selected stock and date range.")
             st.stop()
             
+        # Debug: Print column names to help diagnose the issue
+        print("Columns in stock_data:", stock_data.columns.tolist())
+        
+        # Handle multi-index columns if they exist
+        if isinstance(stock_data.columns, pd.MultiIndex):
+            # Convert multi-index columns to single level with format 'Column_Ticker'
+            stock_data.columns = [f"{col[0]}_{col[1]}" for col in stock_data.columns.values]
+        
+        # Get the actual column names with the ticker suffix
+        close_col = next(col for col in stock_data.columns if col.startswith('Close_'))
+        
         # Calculate investment growth
-        initial_price = float(stock_data['Close'].iloc[0])
-        current_price = float(stock_data['Close'].iloc[-1])
+        initial_price = float(stock_data[close_col].iloc[0])
+        current_price = float(stock_data[close_col].iloc[-1])
         shares_bought = item_price / initial_price
         current_value = shares_bought * current_price
         profit = current_value - item_price
@@ -115,15 +126,17 @@ with st.spinner(f'Fetching {selected_stock} stock data...'):
         formatted_value = '${:,.2f}'.format(current_value)
         
         # Calculate growth over time
-        stock_data['Investment_Value'] = (item_price / initial_price) * stock_data['Close']
+        stock_data['Investment_Value'] = (item_price / initial_price) * stock_data[close_col]
         
-        # Create the plot
+        # Create the plot with reset index to make Date a column
+        plot_data = stock_data.reset_index()
+        
         fig = px.line(
-            stock_data,
-            x=stock_data.index,
+            plot_data,
+            x='Date',
             y='Investment_Value',
             title=f'Growth of ${item_price} Invested in {selected_stock} in {investment_year}',
-            labels={'Investment_Value': 'Investment Value ($)', 'index': 'Date'}
+            labels={'Investment_Value': 'Investment Value ($)', 'Date': 'Date'}
         )
         
         # Add horizontal line for initial investment
