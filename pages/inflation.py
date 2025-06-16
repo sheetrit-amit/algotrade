@@ -148,69 +148,45 @@ def calculate_items(amount, price, years, inflation_rate):
 
 # Calculate
 results = calculate_items(amount, item["price"], years, DEFAULT_INFLATION)
+
+# Inflation comparison row
+st.markdown("### 📊 Inflation Impact")
+col1, col2, col3 = st.columns([1, 0.5, 1])
+
+with col1:
+    st.markdown(f"""
+    <div style='background-color: #e8f5e9; padding: 20px; border-radius: 12px; text-align: center; 
+                 border: 2px solid #4caf50; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+        <div style='font-size: 1.5rem; font-weight: bold; color: #1b5e20;'>Today</div>
+        <div style='font-size: 2.5rem; font-weight: bold; color: #2e7d32; margin: 10px 0;'>{results['items_now']:.1f} {item['emoji']} {item['name']}s</div>
+        <div style='color: #555;'>${item['price']:.2f} each</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("<div style='display: flex; justify-content: center; align-items: center; height: 100%;'>"
+                "<div style='font-size: 2rem;'>→</div>"
+                "</div>", unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+    <div style='background-color: #ffebee; padding: 20px; border-radius: 12px; text-align: center; 
+                 border: 2px solid #ef9a9a; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+        <div style='font-size: 1.5rem; font-weight: bold; color: #c62828;'>In {years} Year{'s' if years > 1 else ''}</div>
+        <div style='font-size: 2.5rem; font-weight: bold; color: #d32f2f; margin: 10px 0;'>{results['items_future']:.1f} {item['emoji']} {item['name']}s</div>
+        <div style='color: #555;'>${results['future_price']:.2f} each</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Warning message if purchasing power decreases
+if results['items_future'] < results['items_now']:
+    st.warning(f"You'll be able to buy {results['items_lost']:.1f} fewer {item['name']}{'s' if results['items_lost'] != 1 else ''} with the same amount of money!")
+
 # Ensure all required keys are in the results dictionary
 results.update({
     'item_name': item['name'],
     'item_price': item['price']
 })
-
-# Display results
-st.markdown("---")
-st.subheader("📊 Results")
-
-# Current purchasing power
-st.markdown(f"""
-<div class='result-box'>
-    <h3>Today with ${amount:,.2f} you can buy:</h3>
-    <div style='font-size: 2.5rem; color: #4CAF50; font-weight: bold; margin: 10px 0;'>
-        {results['items_now']:,.1f} {item['name']}s
-    </div>
-    <p>At ${item['price']:,.2f} each</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Future purchasing power
-st.markdown(f"""
-<div class='result-box'>
-    <h3>In {years} years with ${amount:,.2f} you could buy:</h3>
-    <div style='font-size: 2.5rem; color: #e74c3c; font-weight: bold; margin: 10px 0;'>
-        {results['items_future']:,.1f} {item['name']}s
-    </div>
-    <p>At ${results['future_price']:,.2f} each ({DEFAULT_INFLATION}% annual inflation)</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Comparison
-col1, col2, col3 = st.columns([1, 0.2, 1])
-
-with col1:
-    st.markdown("""
-    <div style='text-align: center; padding: 20px; border-radius: 10px; background-color: #f8f9fa;'>
-        <div style='font-size: 2.5rem; font-weight: bold;'>{:,.0f}</div>
-        <div style='font-size: 1.2rem;'>{}s Today</div>
-        <div style='color: #666;'>${:.2f} each</div>
-    </div>
-    """.format(round(results['items_now']), results['item_name'], item['price']), unsafe_allow_html=True)
-
-with col2:
-    st.markdown("<div style='height: 100%; display: flex; align-items: center; justify-content: center;'><span style='font-size: 2.5rem;'>→</span></div>", unsafe_allow_html=True)
-
-with col3:
-    st.markdown("""
-    <div style='text-align: center; padding: 20px; border-radius: 10px; background-color: #f8f9fa;'>
-        <div style='font-size: 2.5rem; font-weight: bold;'>{:,.0f}</div>
-        <div style='font-size: 1.2rem;'>{}s in {} years</div>
-        <div style='color: #666;'>${:.2f} each</div>
-    </div>
-    """.format(round(results['items_future']), results['item_name'], years, results['future_price']), unsafe_allow_html=True)
-
-st.markdown(f"""
-<div style='text-align: center; margin: 20px 0; padding: 15px; background-color: #fff8f8; border-radius: 10px;'>
-    <p style='color: #e74c3c; font-weight: bold; margin: 0;'>
-        You'll be able to buy {round(results['items_lost'])} fewer {results['item_name']}s with the same amount of money!
-    </p>
-</div>
-""", unsafe_allow_html=True)
 
 # Investment comparison
 st.markdown("---")
