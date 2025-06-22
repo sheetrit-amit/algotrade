@@ -26,22 +26,21 @@ st.markdown("""
         margin-bottom: 0.5rem;
         font-weight: 500;
     }
-.info-box {
-        background: #f8f9fa;
-        color: #1a1a1a; /* צבע כהה מאוד לקריאות מושלמת */
+    .info-box {
+        background: #f8f9fa !important;
+        color: #000000 !important;
         padding: 1.5rem;
         border-radius: 10px;
         border-left: 5px solid #4CAF50;
         margin: 1rem 0;
     }
-    
-    /* כדי להבטיח שגם הכותרות בתוך התיבה יהיו קריאות */
     .info-box h3 {
-        color: #1a1a1a !important;
+        color: #000000 !important;
+        margin-top: 0;
     }
-    
     .info-box p {
-        color: #1a1a1a !important;
+        color: #000000 !important;
+        margin-bottom: 0;
     }
     .fun-fact {
         background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
