@@ -202,8 +202,14 @@ with st.sidebar:
     # Show crypto warning
     if category == 'Cryptocurrency (Direct & ETFs)':
         st.markdown("""
-        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin: 10px 0;">
-        <small><strong>Crypto Note:</strong> Cryptocurrency investments are highly volatile and risky. This is for educational purposes only.</small>
+        <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); 
+                    color: white; 
+                    border-radius: 8px; 
+                    padding: 12px; 
+                    margin: 10px 0;
+                    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.2);
+                    border-left: 4px solid #d35400;">
+        <small><strong>⚠️ Crypto Note:</strong> Cryptocurrency investments are highly volatile and risky. This is for educational purposes only.</small>
         </div>
         """, unsafe_allow_html=True)
     
