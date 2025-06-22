@@ -26,13 +26,22 @@ st.markdown("""
         margin-bottom: 0.5rem;
         font-weight: 500;
     }
-    .info-box {
+.info-box {
         background: #f8f9fa;
-        color: #212121;
+        color: #1a1a1a; /* צבע כהה מאוד לקריאות מושלמת */
         padding: 1.5rem;
         border-radius: 10px;
         border-left: 5px solid #4CAF50;
         margin: 1rem 0;
+    }
+    
+    /* כדי להבטיח שגם הכותרות בתוך התיבה יהיו קריאות */
+    .info-box h3 {
+        color: #1a1a1a !important;
+    }
+    
+    .info-box p {
+        color: #1a1a1a !important;
     }
     .fun-fact {
         background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
