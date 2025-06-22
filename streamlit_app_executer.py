@@ -28,6 +28,7 @@ st.markdown("""
     }
     .info-box {
         background: #f8f9fa;
+        color: #212121;
         padding: 1.5rem;
         border-radius: 10px;
         border-left: 5px solid #4CAF50;
