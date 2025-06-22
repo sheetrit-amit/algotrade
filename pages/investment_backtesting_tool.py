@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import numpy as np
+import requests
 
 # Page configuration
 st.set_page_config(
@@ -61,6 +62,14 @@ st.markdown("""
         margin: 1rem 0;
         box-shadow: 0 6px 24px rgba(52, 73, 94, 0.2);
     }
+    .crypto-box {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        padding: 1.8rem;
+        border-radius: 12px;
+        color: white;
+        margin: 1rem 0;
+        box-shadow: 0 6px 24px rgba(243, 156, 18, 0.2);
+    }
     .metric-card {
         background: white;
         padding: 1.5rem;
@@ -99,11 +108,11 @@ st.markdown("""
 st.markdown("""
 <div class="main-header">
     <h1>Investment Backtesting Tool</h1>
-    <p>Analyze historical investment performance with real market data</p>
+    <p>Analyze historical investment performance with real market data including Bitcoin & Crypto</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Expanded stock selection with categories
+# Expanded stock selection with categories including more crypto
 STOCK_CATEGORIES = {
     'Technology': {
         'Apple Inc.': 'AAPL',
@@ -140,11 +149,44 @@ STOCK_CATEGORIES = {
         'Visa Inc.': 'V',
         'Mastercard Incorporated': 'MA'
     },
-    'Cryptocurrency ETFs': {
+    'Cryptocurrency (Direct & ETFs)': {
+        'Bitcoin USD': 'BTC-USD',
+        'Ethereum USD': 'ETH-USD',
+        'Cardano USD': 'ADA-USD',
+        'Solana USD': 'SOL-USD',
+        'Dogecoin USD': 'DOGE-USD',
         'ProShares Bitcoin Strategy ETF': 'BITO',
-        'Grayscale Ethereum Trust': 'ETHE'
+        'Grayscale Bitcoin Trust': 'GBTC',
+        'Grayscale Ethereum Trust': 'ETHE',
+        'Coinbase Global Inc.': 'COIN'
     }
 }
+
+# Function to get Bitcoin data with fallback
+@st.cache_data(ttl=3600)
+def get_crypto_data(symbol, start_date, end_date):
+    """Get crypto data with multiple fallback options"""
+    try:
+        # Try Yahoo Finance first
+        if symbol.endswith('-USD'):
+            ticker = yf.Ticker(symbol)
+            data = ticker.history(start=start_date, end=end_date, period="max")
+            if not data.empty:
+                return data, "Yahoo Finance"
+        
+        # If Yahoo Finance fails or data is empty, try alternative approach
+        if symbol == 'BTC-USD':
+            # Try GBTC as a proxy for Bitcoin
+            ticker = yf.Ticker('GBTC')
+            data = ticker.history(start=start_date, end=end_date, period="max")
+            if not data.empty:
+                st.warning("⚠️ Using Grayscale Bitcoin Trust (GBTC) as Bitcoin proxy")
+                return data, "GBTC (Bitcoin Proxy)"
+        
+        return None, None
+    except Exception as e:
+        st.error(f"Error fetching crypto data: {str(e)}")
+        return None, None
 
 # Sidebar configuration
 with st.sidebar:
@@ -154,8 +196,16 @@ with st.sidebar:
     category = st.selectbox("Select Sector:", list(STOCK_CATEGORIES.keys()))
     
     # Stock selection within category
-    selected_company = st.selectbox("Choose Company:", list(STOCK_CATEGORIES[category].keys()))
+    selected_company = st.selectbox("Choose Asset:", list(STOCK_CATEGORIES[category].keys()))
     ticker = STOCK_CATEGORIES[category][selected_company]
+    
+    # Show crypto warning
+    if category == 'Cryptocurrency (Direct & ETFs)':
+        st.markdown("""
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin: 10px 0;">
+        <small><strong>Crypto Note:</strong> Cryptocurrency investments are highly volatile and risky. This is for educational purposes only.</small>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -188,11 +238,21 @@ with st.sidebar:
     
     # Quick date presets
     date_presets = {
+        "6 Months": 180,
         "1 Year": 365,
         "2 Years": 730,
         "5 Years": 1825,
-        "10 Years": 3650
     }
+    
+    # For crypto, add shorter periods since they're newer
+    if category == 'Cryptocurrency (Direct & ETFs)':
+        date_presets = {
+            "3 Months": 90,
+            "6 Months": 180,
+            "1 Year": 365,
+            "2 Years": 730,
+            "3 Years": 1095
+        }
     
     selected_preset = st.selectbox("Quick Select:", ["Custom Period"] + list(date_presets.keys()))
     
@@ -217,17 +277,24 @@ with st.sidebar:
     st.markdown("---")
     calculate_button = st.button("Calculate Returns", type="primary", use_container_width=True)
 
-# Cache function for better performance
+# Enhanced cache function for better performance
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_stock_data(ticker, start, end):
-    """Fetch stock data with error handling"""
+    """Fetch stock data with error handling and crypto support"""
     try:
+        # Handle cryptocurrency tickers specially
+        if ticker.endswith('-USD') or ticker in ['BTC-USD', 'ETH-USD', 'ADA-USD', 'SOL-USD', 'DOGE-USD']:
+            data, source = get_crypto_data(ticker, start, end)
+            if data is not None:
+                return data, source
+        
+        # Regular stock data
         stock = yf.Ticker(ticker)
         data = stock.history(start=start, end=end, period="max")
         
         if data.empty:
             st.error(f"No data available for {ticker} in the selected period.")
-            return None
+            return None, None
         
         # Debug information
         actual_start = data.index.min().date()
@@ -237,10 +304,10 @@ def get_stock_data(ticker, start, end):
         if actual_start > start or actual_end < end:
             st.warning(f"⚠️ Note: Data available from {actual_start} to {actual_end} (requested: {start} to {end})")
             
-        return data
+        return data, "Yahoo Finance"
     except Exception as e:
         st.error(f"Error fetching data for {ticker}: {str(e)}")
-        return None
+        return None, None
 
 def calculate_returns(data, investment_amount):
     """Calculate investment returns with additional metrics"""
@@ -285,12 +352,16 @@ if calculate_button:
         st.error("Start date must be before end date.")
     else:
         with st.spinner("Analyzing investment performance..."):
-            stock_data = get_stock_data(ticker, start_date, end_date)
+            stock_data, data_source = get_stock_data(ticker, start_date, end_date)
             
             if stock_data is not None and len(stock_data) > 0:
                 results = calculate_returns(stock_data, investment_amount)
                 
                 if results:
+                    # Show data source
+                    if data_source:
+                        st.success(f"✅ Data loaded successfully from {data_source}")
+                    
                     # Main metrics
                     st.markdown('<h2 class="section-header">Investment Summary</h2>', unsafe_allow_html=True)
                     
@@ -317,25 +388,29 @@ if calculate_button:
                     with col8:
                         st.metric("Annual Volatility", f"{results['volatility']:.1f}%")
                     
-                    # Result summary box
+                    # Result summary box - special styling for crypto
+                    box_class = "crypto-box" if category == 'Cryptocurrency (Direct & ETFs)' else ("profit-box" if results['total_return'] > 0 else "loss-box")
+                    
                     if results['total_return'] > 0:
+                        result_text = "Profitable" if category != 'Cryptocurrency (Direct & ETFs)' else "Profitable (High Risk)"
                         st.markdown(f"""
-                        <div class="profit-box">
-                            <h3>Investment Result: Profitable</h3>
+                        <div class="{box_class}">
+                            <h3>Investment Result: {result_text}</h3>
                             <p>Your investment of <strong>${investment_amount:,.2f}</strong> in {selected_company} 
                             from {start_date.strftime('%B %d, %Y')} would be worth <strong>${results['final_value']:,.2f}</strong> today.</p>
                             <p><strong>Net Profit: ${results['total_return']:,.2f} ({results['return_percentage']:.2f}% total return)</strong></p>
-                            <p>This represents {results['shares_bought']:.2f} shares purchased at ${results['start_price']:.2f} per share.</p>
+                            <p>This represents {results['shares_bought']:.6f} units purchased at ${results['start_price']:.2f} per unit.</p>
                         </div>
                         """, unsafe_allow_html=True)
                     else:
+                        result_text = "Loss" if category != 'Cryptocurrency (Direct & ETFs)' else "Loss (High Risk)"
                         st.markdown(f"""
-                        <div class="loss-box">
-                            <h3>Investment Result: Loss</h3>
+                        <div class="{box_class}">
+                            <h3>Investment Result: {result_text}</h3>
                             <p>Your investment of <strong>${investment_amount:,.2f}</strong> in {selected_company} 
                             from {start_date.strftime('%B %d, %Y')} would be worth <strong>${results['final_value']:,.2f}</strong> today.</p>
                             <p><strong>Net Loss: ${abs(results['total_return']):,.2f} ({results['return_percentage']:.2f}% total return)</strong></p>
-                            <p>This represents {results['shares_bought']:.2f} shares purchased at ${results['start_price']:.2f} per share.</p>
+                            <p>This represents {results['shares_bought']:.6f} units purchased at ${results['start_price']:.2f} per unit.</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -344,13 +419,15 @@ if calculate_button:
                     
                     fig = go.Figure()
                     
-                    # Main price line
+                    # Main price line with different colors for crypto
+                    line_color = '#f39c12' if category == 'Cryptocurrency (Direct & ETFs)' else '#3498db'
+                    
                     fig.add_trace(go.Scatter(
                         x=stock_data.index,
                         y=stock_data['Close'],
                         mode='lines',
                         name=f'{selected_company}',
-                        line=dict(color='#3498db', width=2.5),
+                        line=dict(color=line_color, width=2.5),
                         hovertemplate='<b>Date</b>: %{x}<br><b>Price</b>: $%{y:.2f}<extra></extra>'
                     ))
                     
@@ -400,8 +477,9 @@ if calculate_button:
                     actual_start = stock_data.index.min().date()
                     actual_end = stock_data.index.max().date()
                     
+                    asset_type = "Cryptocurrency" if category == 'Cryptocurrency (Direct & ETFs)' else "Stock"
                     fig.update_layout(
-                        title=f"{selected_company} Stock Performance: {actual_start} to {actual_end}",
+                        title=f"{selected_company} {asset_type} Performance: {actual_start} to {actual_end}",
                         xaxis_title="Date",
                         yaxis_title="Price (USD)",
                         template='plotly_white',
@@ -412,7 +490,7 @@ if calculate_button:
                     
                     st.plotly_chart(fig, use_container_width=True)
                     
-                    # Performance analysis
+                    # Performance analysis with crypto-specific insights
                     st.markdown('<h2 class="section-header">Detailed Analysis</h2>', unsafe_allow_html=True)
                     
                     col1, col2 = st.columns(2)
@@ -433,19 +511,28 @@ if calculate_button:
                         """, unsafe_allow_html=True)
                     
                     with col2:
-                        # Risk assessment
-                        if results['volatility'] < 20:
-                            risk_level, risk_color = "Low", "#27ae60"
-                        elif results['volatility'] < 40:
-                            risk_level, risk_color = "Medium", "#f39c12"
+                        # Risk assessment with crypto-specific thresholds
+                        if category == 'Cryptocurrency (Direct & ETFs)':
+                            if results['volatility'] < 50:
+                                risk_level, risk_color = "High", "#f39c12"
+                            elif results['volatility'] < 100:
+                                risk_level, risk_color = "Very High", "#e67e22"
+                            else:
+                                risk_level, risk_color = "Extremely High", "#e74c3c"
                         else:
-                            risk_level, risk_color = "High", "#e74c3c"
+                            if results['volatility'] < 20:
+                                risk_level, risk_color = "Low", "#27ae60"
+                            elif results['volatility'] < 40:
+                                risk_level, risk_color = "Medium", "#f39c12"
+                            else:
+                                risk_level, risk_color = "High", "#e74c3c"
                         
                         max_drawdown = ((results['min_value'] - results['max_value']) / results['max_value'] * 100) if results['max_value'] > 0 else 0
                         price_range_pct = ((results['max_price'] - results['min_price']) / results['min_price'] * 100) if results['min_price'] > 0 else 0
                         
+                        box_style = "crypto-box" if category == 'Cryptocurrency (Direct & ETFs)' else "info-box"
                         st.markdown(f"""
-                        <div class="info-box">
+                        <div class="{box_style}">
                             <h4>Risk Assessment</h4>
                             <p><strong>Volatility Level:</strong> {results['volatility']:.1f}% annually</p>
                             <p><strong>Risk Category:</strong> <span style="color: {risk_color}; font-weight: bold;">{risk_level}</span></p>
@@ -454,40 +541,47 @@ if calculate_button:
                         </div>
                         """, unsafe_allow_html=True)
 
-# Information section
+# Information section with crypto details
 st.markdown('<h2 class="section-header">How This Tool Works</h2>', unsafe_allow_html=True)
 
 st.markdown("""
-This investment backtesting tool provides historical analysis of stock performance using real market data from Yahoo Finance. 
-It shows exactly what would have happened if you had invested a specific amount in a chosen stock during any historical period.
+This investment backtesting tool provides historical analysis of stock and cryptocurrency performance using real market data from Yahoo Finance. 
+It shows exactly what would have happened if you had invested a specific amount in a chosen asset during any historical period.
 
 **Key Features:**
-- Real-time historical data from major stock exchanges
-- Analysis of 40+ popular stocks across different sectors
-- Comprehensive risk and performance metrics
+- Real-time historical data from major stock exchanges and crypto markets
+- Analysis of 40+ popular stocks and major cryptocurrencies
+- Direct Bitcoin, Ethereum, and other cryptocurrency data
+- Comprehensive risk and performance metrics tailored for each asset class
 - Interactive charts showing key price points
 - Volatility analysis and maximum drawdown calculations
 
+**New Cryptocurrency Features:**
+- **Direct Bitcoin (BTC-USD)** and other major cryptocurrency data
+- **Enhanced risk metrics** specifically calibrated for crypto volatility
+- **Crypto ETFs and trusts** like GBTC and BITO for indirect exposure
+- **Coinbase (COIN)** stock for crypto market exposure
+
 **How to Use:**
-1. **Select a Sector:** Choose from Technology, Consumer & Retail, Financial Services, or Cryptocurrency ETFs
-2. **Pick a Company:** Select from well-known companies in your chosen sector
+1. **Select a Sector:** Choose from Technology, Consumer & Retail, Financial Services, or Cryptocurrency
+2. **Pick an Asset:** Select from well-known companies or cryptocurrencies
 3. **Set Investment Amount:** Use preset amounts or enter a custom value
 4. **Choose Time Period:** Select from preset periods or specify custom dates
 5. **Analyze Results:** Review the comprehensive performance analysis and interactive charts
 
-**Understanding the Metrics:**
-- **Total Return:** The percentage gain or loss on your investment
-- **Volatility:** A measure of price fluctuation (higher = more risky)
-- **Maximum Drawdown:** The largest peak-to-trough decline during the period
-- **Annualized Return:** Your return converted to a yearly percentage
+**Understanding Cryptocurrency Investments:**
+- **Higher Volatility:** Crypto assets typically show much higher price swings than traditional stocks
+- **24/7 Markets:** Unlike stocks, cryptocurrencies trade around the clock
+- **Regulatory Risk:** Crypto regulations are still evolving and can impact prices
+- **Technology Risk:** Cryptocurrencies depend on underlying blockchain technology
 """)
 
 st.markdown("""
 <div class="disclaimer">
 <strong>Important Disclaimer:</strong> This tool is designed for educational and research purposes only. 
-Past performance does not guarantee future results. All investments carry risk, including the potential loss of principal. 
-This analysis should not be considered as personalized investment advice. Please consult with a qualified financial advisor 
-before making investment decisions.
+Past performance does not guarantee future results. All investments carry risk, including the potential loss of principal.
+<strong>Cryptocurrency investments are particularly risky and volatile.</strong> This analysis should not be considered as personalized investment advice. 
+Please consult with a qualified financial advisor before making investment decisions.
 </div>
 """, unsafe_allow_html=True)
 
@@ -495,7 +589,7 @@ before making investment decisions.
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #7f8c8d; padding: 1rem; font-size: 0.9rem;">
-    <p><strong>Investment Backtesting Tool</strong> | Built with Streamlit</p>
-    <p>Market data provided by Yahoo Finance</p>
+    <p><strong>Enhanced Investment Backtesting Tool with Cryptocurrency Support</strong> | Built with Streamlit</p>
+    <p>Market data provided by Yahoo Finance | Cryptocurrency data included</p>
 </div>
 """, unsafe_allow_html=True)
